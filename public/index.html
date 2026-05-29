@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Dịch Vụ May Mặc</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script>
+        // Áp dụng Dark Mode sớm nhất có thể để tránh chớp sáng
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Cấu hình Tailwind CSS dựa trên tài liệu dự án
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0f172a',
+                        accent: '#38bdf8',
+                        background: '#f8fafc',
+                        text: '#1e293b',
+                        muted: '#64748b',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                    },
+                    borderRadius: {
+                        '2xl': '1rem',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- JSCAD I/O for PLT/HPGL parsing -->
+    <script src="https://unpkg.com/@jscad/io/dist/jscad-io.min.js"></script>
+    <!-- xlsx-js-style for beautiful styled Excel exports -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+    <!-- Flatpickr CSS & JS (for Vietnamese calendars) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+</head>
+<body class="bg-background text-text dark:bg-primary dark:text-gray-300 font-sans">
+    <div id="app">
+        <!-- Layout chính của ứng dụng sẽ được render vào đây bởi JavaScript -->
+    </div>
+
+    <!-- Container cho ModalService -->
+    <div id="modal-container"></div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

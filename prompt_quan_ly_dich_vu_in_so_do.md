@@ -11,7 +11,7 @@ Tôi muốn xây dựng một **web app quản lý dịch vụ ngành may mặc*
 5. Quản lý khách hàng
 6. Quản lý công nợ
 7. Xuất hóa đơn
-8. Báo cáo doanh thu
+8. Chốt công nợ
 
 Ứng dụng phải có giao diện hiện đại, dễ sử dụng và dễ mở rộng.
 
@@ -29,7 +29,6 @@ Tôi muốn xây dựng một **web app quản lý dịch vụ ngành may mặc*
 - REST API
 - Multer (upload file)
 - ExcelJS hoặc xlsx
-- PDFKit hoặc Puppeteer để xuất PDF
 
 ## Frontend
 
@@ -257,11 +256,11 @@ Hiển thị:
 - Tạo hóa đơn theo tháng
 - In PDF
 
-## Báo cáo
+## Chốt công nợ
 
-- Theo tháng
 - Theo khách hàng
-- Theo loại dịch vụ
+- Theo khoảng thời gian
+- Xuất PDF đối soát
 
 ## Cài đặt
 
@@ -281,7 +280,7 @@ Hiển thị:
 - Đơn hàng
 - Công nợ
 - Hóa đơn
-- Báo cáo
+- Chốt công nợ
 - Cài đặt
 
 ## Header
@@ -324,28 +323,30 @@ Hiển thị:
 # 8. Cấu Trúc Thư Mục
 
 ```text
-project/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── utils/
-│   │   └── app.js
-│   ├── uploads/
-│   └── server.js
-│
-├── frontend/
+quan-ly-in-so-do/
+├── public/           <-- TOÀN BỘ code giao diện (frontend) sẽ nằm ở đây
 │   ├── index.html
 │   ├── assets/
 │   ├── components/
 │   ├── pages/
+│   ├── services/
 │   └── js/
 │
-└── README.md
+├── src/              <-- TOÀN BỘ code logic (backend) MVC sẽ nằm ở đây
+│   ├── app.js        (File cấu hình Express chính)
+│   ├── controllers/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── middleware/
+│   ├── utils/
+│   └── config/
+│
+├── uploads/          (Thư mục chứa file upload)
+├── server.js         (File khởi chạy server)
+├── package.json
+├── .gitignore
+└── .env.example
 ```
 
 ---
@@ -366,7 +367,7 @@ Khi upload file `.plt`, hệ thống phải:
 
 ## Service
 
-`backend/src/services/pltParserService.js`
+`src/services/pltParserService.js`
 
 ```javascript
 async function parsePlt(filePath) {
@@ -538,7 +539,7 @@ Hãy tạo toàn bộ source code hoàn chỉnh gồm:
 5. CRUD đơn hàng
 6. Quản lý công nợ
 7. Tạo hóa đơn PDF
-8. Báo cáo doanh thu
+8. Chốt công nợ
 9. Upload nhiều file `.plt`
 10. Xuất Excel
 11. Seed dữ liệu mẫu
@@ -563,11 +564,11 @@ Mục tiêu của giai đoạn này là xây dựng toàn bộ giao diện front
     -   [x] Khách hàng
     -   [x] Chạy sơ đồ
     -   [x] Dịch vụ thủ công
-    -   [x] Đơn hàng
-    -   [x] Công nợ
-    -   [x] Hóa đơn
-    -   [x] Báo cáo
-    -   [x] Cài đặt bảng giá
+    -   [x] Đơn hàng (Orders)
+    -   [x] Công nợ (Debts)
+    -   [ ] Hóa đơn (Invoices)
+    -   [x] Chốt công nợ (Debt Settlement)
+    -   [x] Cài đặt bảng giá (Pricing Settings)
 6.  Tạo các UI Components:
     -   [x] DataTable
     -   [x] Modal
@@ -610,23 +611,24 @@ Mục tiêu của giai đoạn này là xây dựng backend Node.js + MongoDB v�
 
 ### Phạm Vi Giai Đoạn 2
 
-1.  [ ] Tạo cấu trúc thư mục backend.
-2.  [ ] Cài đặt dependencies.
-3.  [ ] Kết nối MongoDB.
-4.  [ ] Tạo Mongoose Models.
-5.  [ ] Tạo Controllers, Services, Routes.
-6.  [ ] CRUD khách hàng.
-7.  [ ] CRUD đơn hàng.
-8.  [ ] Quản lý công nợ.
-9.  [ ] Tạo hóa đơn PDF.
-10. [ ] Báo cáo doanh thu.
-11. [ ] Cài đặt bảng giá động.
-12. [ ] Module phân tích file `.plt`.
-13. [ ] Upload nhiều file `.plt`.
-14. [ ] Xuất Excel.
-15. [ ] API lưu kết quả quét thành một ServiceOrder.
-16. [ ] Seed dữ liệu mẫu.
-17. [ ] Viết README.
+1.  [x] Tạo cấu trúc thư mục backend.
+2.  [x] Cài đặt dependencies.
+3.  [x] Kết nối MongoDB.
+4.  [x] Tạo Mongoose Models. (Customer model đã xong)
+5.  [x] Tạo Controllers, Services, Routes. (Customer API đã xong)
+6.  [x] CRUD khách hàng.
+7.  [x] Kết nối frontend với API khách hàng.
+8.  [x] CRUD đơn hàng. (Tạo, Đọc, Xóa, Xem chi tiết đã xong)
+9.  [x] Quản lý công nợ.
+10. [ ] Tạo hóa đơn PDF.
+11. [x] Chốt công nợ.
+12. [x] Cài đặt bảng giá động.
+13. [ ] Module phân tích file `.plt`.
+14. [ ] Upload nhiều file `.plt`.
+15. [ ] Xuất Excel.
+16. [ ] API lưu kết quả quét thành một ServiceOrder.
+17. [ ] Seed dữ liệu mẫu.
+18. [ ] Viết README.
 
 ### Kết Quả Mong Muốn Giai Đoạn 2
 
@@ -639,13 +641,13 @@ Mục tiêu của giai đoạn này là xây dựng backend Node.js + MongoDB v�
 ### Yêu Cầu Cho Gemini Code
 
 Hãy thực hiện từng bước sau:
-1.  [ ] Tạo backend structure.
-2.  [ ] Tạo models.
-3.  [ ] Tạo routes/controllers/services.
-4.  [ ] Tích hợp MongoDB.
-5.  [ ] Tạo module parser `.plt`.
-6.  [ ] Tạo API upload và export Excel.
-7.  [ ] Kết nối frontend.
+1.  [x] Tạo backend structure.
+2.  [x] Tạo models. (Customer)
+3.  [x] Tạo routes/controllers/services. (Customer)
+4.  [x] Tích hợp MongoDB.
+5.  [x] Kết nối frontend. (Customer page)
+6.  [ ] Tạo module parser `.plt`.
+7.  [ ] Tạo API upload và export Excel.
 8.  [ ] Seed dữ liệu.
 9.  [ ] Viết README.
 
@@ -912,3 +914,9 @@ Kết quả:
 - Tạo nhiều `ServiceOrder` với `serviceType = 'marker'`.
 - Gắn đúng `customerId`.
 - Trả về danh sách đơn hàng đã tạo.
+
+---
+
+# 19. Quy Tắc Hoạt Động Dành Cho Gemini
+
+- **BẮT BUỘC:** Mỗi lần thực hiện xong một tính năng hoặc một phần công việc, Gemini phải tự động cập nhật tiến trình (đánh dấu `[x]` vào các checkbox tương ứng ở mục Giai Đoạn 1 và Giai Đoạn 2) trực tiếp vào file `prompt_quan_ly_dich_vu_in_so_do.md` này.
