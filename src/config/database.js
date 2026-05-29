@@ -30,13 +30,19 @@ const seedAdmin = async () => {
 
 const connectDB = async () => {
     try {
+        if (mongoose.connection.readyState >= 1) return;
+        
+        if (!process.env.MONGODB_URI) {
+            console.error('MONGODB_URI is not defined in env!');
+            return;
+        }
+
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('MongoDB connected successfully.');
         await seedAdmin();
     } catch (error) {
         console.error('MongoDB connection error:', error.message);
-        // Thoát khỏi tiến trình với mã lỗi 1 nếu không thể kết nối
-        process.exit(1);
+        // Không thoát tiến trình để tránh crash instance trên Vercel
     }
 };
 
