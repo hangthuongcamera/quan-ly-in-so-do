@@ -4,9 +4,6 @@ export const Modal = ({ title, content, footer, size = 'max-w-lg' }) => {
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full ${size} m-4 transform transition-transform duration-300 scale-95">
                 <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-xl font-semibold text-text dark:text-white">${title}</h3>
-                    <button id="modal-close-btn" class="text-muted hover:text-danger p-1 rounded-full">
-                        <i data-lucide="x" class="w-6 h-6"></i>
-                    </button>
                 </div>
                 <div id="modal-content" class="p-6">
                     ${content}
