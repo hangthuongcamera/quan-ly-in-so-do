@@ -7,6 +7,7 @@
 clear_db.js
 DEPLOY_GUIDE.md
 prompt_quan_ly_dich_vu_in_so_do.md
+restore_mongodb_atlas.txt
 dump
 # Logs
 logs
