@@ -11,9 +11,11 @@ export const Modal = ({ title, content, footer, size = 'max-w-lg' }) => {
                 <div id="modal-content" class="p-6">
                     ${content}
                 </div>
-                <div id="modal-footer" class="px-6 py-4 bg-gray-50 dark:bg-gray-900 text-right rounded-b-2xl">
+                ${footer ? `
+                <div id="modal-footer" class="px-6 py-4 bg-gray-50 dark:bg-gray-900 text-right rounded-b-2xl border-t border-gray-200 dark:border-gray-700">
                     ${footer}
                 </div>
+                ` : ''}
             </div>
         </div>
     `;

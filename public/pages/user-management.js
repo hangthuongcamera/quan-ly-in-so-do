@@ -197,7 +197,7 @@ const openUserModal = (user = null) => {
             </div>
 
             <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-                <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" onclick="window.closeModal()">Hủy</button>
+                <button type="button" id="cancel-user-btn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Hủy</button>
                 <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Lưu</button>
             </div>
         </form>
@@ -206,8 +206,10 @@ const openUserModal = (user = null) => {
     ModalService.open({
         title: isEdit ? 'Cập nhật người dùng' : 'Thêm người dùng mới',
         content: content,
-        width: 'max-w-4xl'
+        size: 'max-w-4xl'
     });
+
+    document.getElementById('cancel-user-btn').addEventListener('click', () => ModalService.close());
     
     // Xử lý ẩn hiện phần phân quyền nếu chọn Admin
     const roleSelect = document.querySelector('select[name="role"]');
