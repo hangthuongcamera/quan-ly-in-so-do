@@ -7,6 +7,12 @@ const orderItemSchema = new mongoose.Schema({
     quantity: { type: Number, required: true },
     unitPrice: { type: Number, required: true },
     amount: { type: Number, required: true },
+    fileName: { type: String },
+    fileDate: { type: String },
+    width: { type: Number },
+    length: { type: Number },
+    copies: { type: Number },
+    hasCreationFee: { type: Boolean }
 }, { _id: false });
 
 const serviceOrderSchema = new mongoose.Schema({

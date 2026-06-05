@@ -112,31 +112,66 @@ const handleSaveOrder = async () => {
         return;
     }
 
-    // Sửa tên biến để đồng bộ với thuộc tính totalAmount của orderData
-    const totalAmount = analysisResults.reduce((sum, item) => sum + item.amount, 0);
-    const totalFees = analysisResults.filter(i => i.hasCreationFee).length * (priceSettings.markerCreationFee || 0);
+    // 1. Gom nhóm analysisResults theo rawFileDate
+    const grouped = {};
+    for (const item of analysisResults) {
+        const dateKey = item.rawFileDate || new Date().toISOString().split('T')[0];
+        if (!grouped[dateKey]) {
+            grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(item);
+    }
 
-    const orderData = {
-        customerId,
-        orderDate: new Date().toISOString().split('T')[0], // Lấy ngày hôm nay
-        serviceType: 'marker', // Đánh dấu đây là đơn hàng sơ đồ
-        items: analysisResults,
-        totalAmount,
-        note: totalFees > 0 
-            ? `Bao gồm phí chạy sơ đồ cho ${analysisResults.filter(i => i.hasCreationFee).length} file: ${new Intl.NumberFormat('vi-VN').format(totalFees)} VNĐ` 
-            : 'Chỉ tính phí in sơ đồ.'
-    };
+    const totalGroups = Object.keys(grouped).length;
+    let successCount = 0;
+    let failedGroups = [];
 
     LoadingSpinnerService.show();
+
     try {
-        // Sử dụng hàm createOrder đã có, thay vì saveMarkerOrder không tồn tại
-        await apiService.createOrder(orderData);
-        ToastService.show('Đã lưu đơn hàng sơ đồ thành công!', 'success');
-        // Xóa kết quả sau khi lưu thành công
-        analysisResults = []; // Clear results after saving
-        renderResultsTable();
+        // 2. Lưu tuần tự các đơn hàng cho từng nhóm ngày để cơ chế FIFO của hệ thống chạy đúng thứ tự
+        for (const [dateStr, items] of Object.entries(grouped)) {
+            const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+            const totalFees = items.filter(i => i.hasCreationFee).length * (priceSettings.markerCreationFee || 0);
+
+            // Loại bỏ trường tạm rawFileDate trước khi lưu vào database
+            const cleanedItems = items.map(({ rawFileDate, ...rest }) => rest);
+
+            const orderData = {
+                customerId,
+                orderDate: dateStr, // YYYY-MM-DD
+                serviceType: 'marker',
+                items: cleanedItems,
+                totalAmount,
+                note: totalFees > 0 
+                    ? `Bao gồm phí chạy sơ đồ cho ${items.filter(i => i.hasCreationFee).length} file: ${new Intl.NumberFormat('vi-VN').format(totalFees)} VNĐ` 
+                    : 'Chỉ tính phí in sơ đồ.'
+            };
+
+            try {
+                await apiService.createOrder(orderData);
+                successCount++;
+            } catch (err) {
+                console.error(`Lỗi khi lưu đơn hàng nhóm ngày ${dateStr}:`, err);
+                failedGroups.push(dateStr);
+            }
+        }
+
+        // 3. Hiển thị thông báo tổng hợp và cập nhật UI
+        if (successCount === totalGroups) {
+            ToastService.show(`Đã lưu thành công ${successCount} đơn hàng theo ngày file!`, 'success');
+            analysisResults = []; // Xóa toàn bộ kết quả sau khi tất cả lưu thành công
+            renderResultsTable();
+        } else if (successCount > 0) {
+            ToastService.show(`Đã lưu thành công ${successCount} đơn hàng. Lỗi lưu nhóm ngày: ${failedGroups.join(', ')}`, 'warning');
+            // Giữ lại các file của các nhóm bị lỗi để người dùng có cơ hội bấm lưu lại
+            analysisResults = analysisResults.filter(item => failedGroups.includes(item.rawFileDate));
+            renderResultsTable();
+        } else {
+            ToastService.show('Lỗi khi lưu đơn hàng. Vui lòng kiểm tra lại kết nối hoặc dữ liệu.', 'danger');
+        }
     } catch (error) {
-        ToastService.show('Lỗi khi lưu đơn hàng: ' + error.message, 'danger');
+        ToastService.show('Lỗi hệ thống khi lưu đơn hàng: ' + error.message, 'danger');
     } finally {
         LoadingSpinnerService.hide();
     }
@@ -273,11 +308,18 @@ const handleFiles = (files) => {
                 const baseAmount = quantity * (pricing.unitPrice || 0);
                 const amount = baseAmount + (isFeeChecked ? (priceSettings.markerCreationFee || 0) : 0);
 
+                const localDate = new Date(file.lastModified);
+                const year = localDate.getFullYear();
+                const month = String(localDate.getMonth() + 1).padStart(2, '0');
+                const day = String(localDate.getDate()).padStart(2, '0');
+                const rawFileDate = `${year}-${month}-${day}`;
+
                 analysisResults.push({
                     serviceType: 'marker',
                     description: `In sơ đồ: ${file.name} (1 bản)${isFeeChecked ? ' + Phí chạy' : ''}`,
                     fileName: file.name,
-                    fileDate: new Date(file.lastModified).toLocaleDateString('vi-VN'),
+                    fileDate: localDate.toLocaleDateString('vi-VN'),
+                    rawFileDate: rawFileDate,
                     width: parseFloat(width.toFixed(2)),
                     length: parseFloat(length.toFixed(2)),
                     chargeWidth: pricing.chargeWidth,
