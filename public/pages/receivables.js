@@ -44,9 +44,106 @@ const openPaymentModal = async () => {
         footer: footerContent,
     });
 
+    // --- Thiết lập tìm kiếm khách hàng trong Popup Ghi nhận Thanh toán ---
+    const searchInput = document.getElementById('payment-customer-search-input');
+    const hiddenSelect = document.getElementById('payment-customerId');
+    const dropdownList = document.getElementById('payment-customer-dropdown-list');
+    const clearCustomerBtn = document.getElementById('payment-clear-customer-btn');
+
+    const clickOutsideHandler = (e) => {
+        if (searchInput && dropdownList && !searchInput.contains(e.target) && !dropdownList.contains(e.target) && !clearCustomerBtn?.contains(e.target)) {
+            dropdownList.classList.add('hidden');
+            const selectedCustomer = customers.find(c => c.id === hiddenSelect.value);
+            if (selectedCustomer) {
+                searchInput.value = `${selectedCustomer.companyName || selectedCustomer.contactPerson || ''} (${selectedCustomer.customerCode})`;
+            } else {
+                searchInput.value = '';
+                hiddenSelect.value = '';
+            }
+            toggleClearBtn();
+        }
+    };
+
+    const toggleClearBtn = () => {
+        if (searchInput && searchInput.value.trim() !== '') {
+            clearCustomerBtn?.classList.remove('hidden');
+        } else {
+            clearCustomerBtn?.classList.add('hidden');
+        }
+    };
+
+    if (searchInput && hiddenSelect && dropdownList) {
+        const renderList = (filterText = '') => {
+            const filtered = customers.filter(c => 
+                `${c.companyName || c.contactPerson || ''} ${c.customerCode || ''} ${c.phone || ''}`.toLowerCase().includes(filterText.toLowerCase())
+            );
+            
+            if (filtered.length === 0) {
+                dropdownList.innerHTML = `<li class="px-3 py-2 text-sm text-gray-500 text-center">Không tìm thấy khách hàng</li>`;
+                return;
+            }
+
+            dropdownList.innerHTML = filtered.map(c => `
+                <li class="px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-sm border-b border-gray-100 last:border-0" data-id="${c.id}" data-name="${c.companyName || c.contactPerson || ''} (${c.customerCode})">
+                    <div class="font-medium">${c.companyName || c.contactPerson || ''}</div>
+                    <div class="text-xs text-muted">Mã: ${c.customerCode} ${c.phone ? `- SĐT: ${c.phone}` : ''}</div>
+                </li>
+            `).join('');
+        };
+
+        searchInput.addEventListener('click', () => { 
+            dropdownList.classList.remove('hidden'); 
+            renderList(searchInput.value); 
+        });
+        
+        searchInput.addEventListener('input', (e) => { 
+            dropdownList.classList.remove('hidden'); 
+            hiddenSelect.value = ''; // Reset ID khi người dùng thay đổi chữ nhập
+            toggleClearBtn(); 
+            renderList(e.target.value); 
+        });
+
+        dropdownList.addEventListener('click', (e) => {
+            const li = e.target.closest('li[data-id]');
+            if (li) {
+                hiddenSelect.value = li.dataset.id;
+                searchInput.value = li.dataset.name;
+                dropdownList.classList.add('hidden');
+                toggleClearBtn();
+            }
+        });
+
+        document.addEventListener('click', clickOutsideHandler);
+
+        clearCustomerBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            searchInput.value = '';
+            hiddenSelect.value = '';
+            toggleClearBtn();
+            dropdownList.classList.remove('hidden');
+            renderList('');
+            searchInput.focus();
+        });
+
+        // Ghi đè phương thức đóng modal để hủy sự kiện clickOutside
+        const originalClose = ModalService.close;
+        ModalService.close = (onCloseCallback) => {
+            document.removeEventListener('click', clickOutsideHandler);
+            ModalService.close = originalClose;
+            originalClose(onCloseCallback);
+        };
+    }
+
     document.getElementById('modal-cancel-btn').addEventListener('click', () => ModalService.close());
     document.getElementById('modal-save-btn').addEventListener('click', async () => {
         const form = document.getElementById('payment-form');
+        
+        // Kiểm tra xem đã chọn khách hàng hợp lệ chưa
+        if (!hiddenSelect || !hiddenSelect.value) {
+            ToastService.show('Vui lòng chọn khách hàng từ danh sách gợi ý.', 'warning');
+            return;
+        }
+
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
@@ -55,7 +152,7 @@ const openPaymentModal = async () => {
             await apiService.savePayment(data);
             ToastService.show('Đã ghi nhận thanh toán thành công!', 'success');
             ModalService.close();
-            renderReceivablesPage(); // Re-render the page to reflect changes
+            renderReceivablesPage(); // Tải lại trang để cập nhật số liệu
         } catch (error) {
             ToastService.show('Lỗi khi ghi nhận thanh toán: ' + error.message, 'danger');
         } finally {
