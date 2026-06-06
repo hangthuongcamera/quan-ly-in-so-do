@@ -10,6 +10,18 @@ let priceSettings = {};
 
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
+const formatNumberWithDots = (val) => {
+    const clean = val.toString().replace(/\D/g, '');
+    if (!clean) return '';
+    return new Intl.NumberFormat('vi-VN').format(parseInt(clean, 10));
+};
+
+const parseNumberFromFormatted = (val) => {
+    if (!val) return 0;
+    const clean = val.toString().replace(/\./g, '');
+    return parseFloat(clean) || 0;
+};
+
 const renderOrderItemsTable = () => {
     const container = document.getElementById('edit-order-items-container');
     const totalDisplay = document.getElementById('edit-total-amount');
@@ -54,7 +66,7 @@ const renderOrderItemsTable = () => {
                                 <input type="number" min="0" step="0.01" class="update-item-qty w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" data-index="${index}" value="${item.quantity || 1}">
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <input type="number" min="0" class="update-item-price w-28 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" data-index="${index}" value="${item.unitPrice || 0}">
+                                <input type="text" class="update-item-price w-28 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" data-index="${index}" value="${formatNumberWithDots(item.unitPrice || 0)}">
                             </td>
                             <td class="px-4 py-3 text-right font-semibold text-accent item-amount-display">${formatCurrency(item.amount || 0)}</td>
                             <td class="px-4 py-3 text-center">
@@ -153,7 +165,20 @@ const attachEditEventListeners = (orderId) => {
             const item = currentOrder.items[index];
             const tr = e.target.closest('tr');
             
-            const newPrice = parseFloat(tr.querySelector('.update-item-price').value) || 0;
+            // Tự động định dạng dấu chấm phân cách hàng nghìn khi nhập đơn giá
+            if (e.target.classList.contains('update-item-price')) {
+                const cursorPosition = e.target.selectionStart;
+                const originalLength = e.target.value.length;
+                
+                const formatted = formatNumberWithDots(e.target.value);
+                e.target.value = formatted;
+                
+                const newLength = formatted.length;
+                const newPosition = cursorPosition + (newLength - originalLength);
+                e.target.setSelectionRange(newPosition, newPosition);
+            }
+            
+            const newPrice = parseNumberFromFormatted(tr.querySelector('.update-item-price').value);
             
             if (e.target.classList.contains('update-item-copies')) {
                 let newCopies = parseInt(tr.querySelector('.update-item-copies').value, 10) || 1;
