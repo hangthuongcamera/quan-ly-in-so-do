@@ -713,6 +713,13 @@ const exportToExcel = () => {
         return d >= start && d <= end;
     });
 
+    // Sắp xếp đơn hàng tăng dần theo ngày đơn hàng
+    ordersInPeriod.sort((a, b) => {
+        const dateA = new Date(a.rawOrderDate || a.orderDate);
+        const dateB = new Date(b.rawOrderDate || b.orderDate);
+        return dateA - dateB;
+    });
+
     if (ordersInPeriod.length === 0) {
         ToastService.show('Không có đơn hàng phát sinh trong khoảng thời gian này.', 'warning');
         return;
