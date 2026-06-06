@@ -2,6 +2,18 @@ import { apiService } from '../services/api.js';
 import { LoadingSpinnerService } from '../components/LoadingSpinner.js';
 import { ToastService } from '../components/Toast.js';
 
+const formatNumberWithDots = (val) => {
+    const clean = val.toString().replace(/\D/g, '');
+    if (!clean) return '';
+    return new Intl.NumberFormat('vi-VN').format(parseInt(clean, 10));
+};
+
+const parseNumberFromFormatted = (val) => {
+    if (!val) return 0;
+    const clean = val.toString().replace(/\./g, '');
+    return parseFloat(clean) || 0;
+};
+
 let currentPriceSettings = {}; // State to hold settings from API
 
 // Component render bảng giá chạy sơ đồ
@@ -33,7 +45,7 @@ const renderMarkerPricingTable = (markerPricing = []) => {
                                            class="w-24 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </td>
                                 <td class="px-6 py-4">
-                                    <input type="number" data-field="unitPrice" data-id="${price.id}" id="marker-price-${price.id}" name="marker-price-${price.id}" value="${price.unitPrice}" 
+                                    <input type="text" data-field="unitPrice" data-id="${price.id}" id="marker-price-${price.id}" name="marker-price-${price.id}" value="${formatNumberWithDots(price.unitPrice || 0)}" 
                                            class="w-32 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -73,19 +85,19 @@ const renderOtherServicesForm = (settings = {}) => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="markerCreationFee" class="block text-sm font-medium text-muted mb-1">Phí dịch vụ chạy sơ đồ (VNĐ/lần)</label>
-                    <input type="number" id="markerCreationFee" name="markerCreationFee" value="${settings.markerCreationFee || 0}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="text" id="markerCreationFee" name="markerCreationFee" value="${formatNumberWithDots(settings.markerCreationFee || 0)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
                 <div>
                     <label for="gradingRate" class="block text-sm font-medium text-muted mb-1">Nhảy size (VNĐ/chi tiết)</label>
-                    <input type="number" id="gradingRate" name="gradingRate" value="${settings.gradingRate || 0}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="text" id="gradingRate" name="gradingRate" value="${formatNumberWithDots(settings.gradingRate || 0)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
                 <div>
                     <label for="designRate" class="block text-sm font-medium text-muted mb-1">Thiết kế rập (VNĐ/lần)</label>
-                    <input type="number" id="designRate" name="designRate" value="${settings.designRate || 0}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="text" id="designRate" name="designRate" value="${formatNumberWithDots(settings.designRate || 0)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
                 <div>
                     <label for="digitizingRate" class="block text-sm font-medium text-muted mb-1">Nhập rập (VNĐ/chi tiết)</label>
-                    <input type="number" id="digitizingRate" name="digitizingRate" value="${settings.digitizingRate || 0}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="text" id="digitizingRate" name="digitizingRate" value="${formatNumberWithDots(settings.digitizingRate || 0)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
             </div>
         </div>
@@ -166,6 +178,27 @@ const attachSettingsEventListeners = () => {
         }
     });
 
+    // Tự động định dạng dấu chấm phân cách hàng nghìn khi nhập các ô liên quan đơn vị tiền
+    pageContainer.addEventListener('input', (e) => {
+        if (
+            e.target.id === 'markerCreationFee' ||
+            e.target.id === 'gradingRate' ||
+            e.target.id === 'designRate' ||
+            e.target.id === 'digitizingRate' ||
+            e.target.dataset.field === 'unitPrice'
+        ) {
+            const cursorPosition = e.target.selectionStart;
+            const originalLength = e.target.value.length;
+            
+            const formatted = formatNumberWithDots(e.target.value);
+            e.target.value = formatted;
+            
+            const newLength = formatted.length;
+            const newPosition = cursorPosition + (newLength - originalLength);
+            e.target.setSelectionRange(newPosition, newPosition);
+        }
+    });
+
     document.getElementById('save-settings-btn')?.addEventListener('click', async () => {
         // Lấy dữ liệu từ form và tạo object settings mới
         const markerPricingData = currentPriceSettings.markerPricing.map(p => {
@@ -176,17 +209,17 @@ const attachSettingsEventListeners = () => {
                 id: p.id,
                 chargeWidth: parseFloat(row.querySelector('input[data-field="chargeWidth"]').value) || 0,
                 maxWidth: parseFloat(row.querySelector('input[data-field="maxWidth"]').value) || 0,
-                unitPrice: parseFloat(row.querySelector('input[data-field="unitPrice"]').value) || 0,
+                unitPrice: parseNumberFromFormatted(row.querySelector('input[data-field="unitPrice"]').value),
                 isActive: row.querySelector('input[type="checkbox"]').checked
             };
         });
 
         const newSettings = {
             markerPricing: markerPricingData,
-            gradingRate: parseFloat(document.getElementById('gradingRate').value) || 0,
-            markerCreationFee: parseFloat(document.getElementById('markerCreationFee').value) || 0,
-            designRate: parseFloat(document.getElementById('designRate').value) || 0,
-            digitizingRate: parseFloat(document.getElementById('digitizingRate').value) || 0,
+            gradingRate: parseNumberFromFormatted(document.getElementById('gradingRate').value),
+            markerCreationFee: parseNumberFromFormatted(document.getElementById('markerCreationFee').value),
+            designRate: parseNumberFromFormatted(document.getElementById('designRate').value),
+            digitizingRate: parseNumberFromFormatted(document.getElementById('digitizingRate').value),
             pdfTitle: document.getElementById('pdfTitle').value.trim(),
             pdfAddress: document.getElementById('pdfAddress').value.trim(),
             pdfPhone: document.getElementById('pdfPhone').value.trim(),
