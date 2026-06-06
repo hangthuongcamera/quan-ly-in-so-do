@@ -10,6 +10,18 @@ let priceSettings = {}; // Lưu bảng giá dịch vụ từ API
 
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
+const formatNumberWithDots = (val) => {
+    const clean = val.toString().replace(/\D/g, '');
+    if (!clean) return '';
+    return new Intl.NumberFormat('vi-VN').format(parseInt(clean, 10));
+};
+
+const parseNumberFromFormatted = (val) => {
+    if (!val) return 0;
+    const clean = val.toString().replace(/\./g, '');
+    return parseFloat(clean) || 0;
+};
+
 // Render bảng các dịch vụ đã thêm
 const renderServiceItemsTable = () => {
     const container = document.getElementById('service-items-container');
@@ -76,27 +88,42 @@ const attachManualServiceEventListeners = () => {
     const calculateCurrentAmount = () => {
         if (!quantityInput || !unitPriceInput || !currentAmountDisplay) return;
         const quantity = parseFloat(quantityInput.value) || 0;
-        const unitPrice = parseFloat(unitPriceInput.value) || 0;
+        const unitPrice = parseNumberFromFormatted(unitPriceInput.value);
         const amount = quantity * unitPrice;
         currentAmountDisplay.textContent = formatCurrency(amount);
     };
 
     quantityInput?.addEventListener('input', calculateCurrentAmount);
-    unitPriceInput?.addEventListener('input', calculateCurrentAmount);
+    
+    // Tự động định dạng dấu chấm phân cách phần nghìn khi người dùng nhập đơn giá
+    unitPriceInput?.addEventListener('input', (e) => {
+        const cursorPosition = e.target.selectionStart;
+        const originalLength = e.target.value.length;
+        
+        const formatted = formatNumberWithDots(e.target.value);
+        e.target.value = formatted;
+        
+        const newLength = formatted.length;
+        const newPosition = cursorPosition + (newLength - originalLength);
+        e.target.setSelectionRange(newPosition, newPosition);
+        
+        calculateCurrentAmount();
+    });
 
     // Tự động điền đơn giá khi chọn dịch vụ
     const serviceTypeSelect = document.getElementById('serviceType');
     serviceTypeSelect?.addEventListener('change', (e) => {
         const selected = e.target.value;
+        let price = 0;
         if (selected === 'grading') {
-            unitPriceInput.value = priceSettings.gradingRate || 0;
+            price = priceSettings.gradingRate || 0;
         } else if (selected === 'design') {
-            unitPriceInput.value = priceSettings.designRate || 0;
+            price = priceSettings.designRate || 0;
         } else if (selected === 'digitizing') {
-            unitPriceInput.value = priceSettings.digitizingRate || 0;
-        } else {
-            unitPriceInput.value = '';
+            price = priceSettings.digitizingRate || 0;
         }
+        
+        unitPriceInput.value = price > 0 ? formatNumberWithDots(price.toString()) : '';
         calculateCurrentAmount();
     });
 
@@ -109,7 +136,7 @@ const attachManualServiceEventListeners = () => {
         const serviceTypeLabel = serviceTypeSelect.options[serviceTypeSelect.selectedIndex].text;
         const description = descriptionInput.value.trim();
         const quantity = parseFloat(quantityInput.value) || 0;
-        const unitPrice = parseFloat(unitPriceInput.value) || 0;
+        const unitPrice = parseNumberFromFormatted(unitPriceInput.value);
 
         if (!serviceType) {
             ToastService.show('Vui lòng chọn loại dịch vụ.', 'warning');
@@ -348,7 +375,7 @@ export const renderManualServicesPage = async () => {
                         <div class="lg:col-span-2">${FormSelect({ id: 'serviceType', label: 'Loại Dịch Vụ', options: serviceOptions })}</div>
                         <div class="lg:col-span-2">${FormInput({ id: 'description', label: 'Mô tả chi tiết', placeholder: 'Ví dụ: Nhảy size áo sơ mi' })}</div>
                         <div>${FormInput({ id: 'quantity', label: 'Số Lượng', type: 'number', placeholder: '0' })}</div>
-                        <div>${FormInput({ id: 'unitPrice', label: 'Đơn Giá', type: 'number', placeholder: '0' })}</div>
+                        <div>${FormInput({ id: 'unitPrice', label: 'Đơn Giá', type: 'text', placeholder: '0' })}</div>
                         <div class="text-right">
                             <p class="text-sm text-muted">Thành tiền</p>
                             <p id="current-amount-display" class="font-bold text-accent text-lg">0 VNĐ</p>
