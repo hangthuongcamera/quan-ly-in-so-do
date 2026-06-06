@@ -15,7 +15,7 @@ export const PaymentForm = (payment = {}, customers = []) => {
                 <ul id="payment-customer-dropdown-list" class="absolute z-50 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto hidden">
                 </ul>
             </div>
-            ${FormInput({ id: 'amount', label: 'Số tiền thanh toán (VNĐ)', type: 'number', value: payment.amount || '', placeholder: '0', required: true })}
+            ${FormInput({ id: 'amount', label: 'Số tiền thanh toán (VNĐ)', type: 'text', value: payment.amount ? new Intl.NumberFormat('vi-VN').format(payment.amount) : '', placeholder: '0', required: true })}
             ${FormTextarea({ id: 'note', label: 'Ghi chú', value: payment.note || '', placeholder: 'Nội dung thanh toán...' })}
         </form>
     `;

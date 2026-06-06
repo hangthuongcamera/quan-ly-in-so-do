@@ -8,6 +8,18 @@ import { apiService } from '../services/api.js';
 
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
+const formatNumberWithDots = (val) => {
+    const clean = val.toString().replace(/\D/g, '');
+    if (!clean) return '';
+    return new Intl.NumberFormat('vi-VN').format(parseInt(clean, 10));
+};
+
+const parseNumberFromFormatted = (val) => {
+    if (!val) return 0;
+    const clean = val.toString().replace(/\./g, '');
+    return parseFloat(clean) || 0;
+};
+
 // State management for the page
 let summaryCurrentPage = 1;
 let summaryItemsPerPage = 10;
@@ -134,6 +146,20 @@ const openPaymentModal = async () => {
         };
     }
 
+    // Tự động định dạng dấu chấm phân cách hàng nghìn khi nhập số tiền
+    const amountInput = document.getElementById('amount');
+    amountInput?.addEventListener('input', (e) => {
+        const cursorPosition = e.target.selectionStart;
+        const originalLength = e.target.value.length;
+        
+        const formatted = formatNumberWithDots(e.target.value);
+        e.target.value = formatted;
+        
+        const newLength = formatted.length;
+        const newPosition = cursorPosition + (newLength - originalLength);
+        e.target.setSelectionRange(newPosition, newPosition);
+    });
+
     document.getElementById('modal-cancel-btn').addEventListener('click', () => ModalService.close());
     document.getElementById('modal-save-btn').addEventListener('click', async () => {
         const form = document.getElementById('payment-form');
@@ -146,6 +172,7 @@ const openPaymentModal = async () => {
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
+        data.amount = parseNumberFromFormatted(data.amount);
 
         LoadingSpinnerService.show();
         try {
@@ -180,7 +207,7 @@ const openRefundModal = async (customerId, refundAmount) => {
             </div>
             <div>
                 <label class="block text-sm font-medium text-muted mb-1">Số tiền hoàn trả (VNĐ)</label>
-                <input type="number" id="refund-amount" name="amount" class="w-full text-sm bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 rounded-lg p-2.5 text-text dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-accent" value="${refundAmount}" required min="1">
+                <input type="text" id="refund-amount" name="amount" class="w-full text-sm bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 rounded-lg p-2.5 text-text dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-accent" value="${formatNumberWithDots(refundAmount)}" required>
             </div>
             <div>
                 <label class="block text-sm font-medium text-muted mb-1">Ghi chú</label>
@@ -200,9 +227,23 @@ const openRefundModal = async (customerId, refundAmount) => {
         footer: footerContent,
     });
 
+    // Tự động định dạng dấu chấm phân cách hàng nghìn khi nhập số tiền hoàn trả
+    const refundAmountInput = document.getElementById('refund-amount');
+    refundAmountInput?.addEventListener('input', (e) => {
+        const cursorPosition = e.target.selectionStart;
+        const originalLength = e.target.value.length;
+        
+        const formatted = formatNumberWithDots(e.target.value);
+        e.target.value = formatted;
+        
+        const newLength = formatted.length;
+        const newPosition = cursorPosition + (newLength - originalLength);
+        e.target.setSelectionRange(newPosition, newPosition);
+    });
+
     document.getElementById('modal-cancel-btn').addEventListener('click', () => ModalService.close());
     document.getElementById('modal-save-btn').addEventListener('click', async () => {
-        const amountVal = parseFloat(document.getElementById('refund-amount').value);
+        const amountVal = parseNumberFromFormatted(document.getElementById('refund-amount').value);
         const noteVal = document.getElementById('refund-note').value;
 
         if (isNaN(amountVal) || amountVal <= 0) {
