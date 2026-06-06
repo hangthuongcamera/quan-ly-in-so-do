@@ -163,7 +163,7 @@ const attachManualServiceEventListeners = () => {
         // Reset các ô nhập liệu
         serviceTypeSelect.value = '';
         descriptionInput.value = '';
-        quantityInput.value = '';
+        quantityInput.value = '1';
         unitPriceInput.value = '';
         currentAmountDisplay.textContent = formatCurrency(0);
         descriptionInput.focus();
@@ -374,7 +374,7 @@ export const renderManualServicesPage = async () => {
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                         <div class="lg:col-span-2">${FormSelect({ id: 'serviceType', label: 'Loại Dịch Vụ', options: serviceOptions })}</div>
                         <div class="lg:col-span-2">${FormInput({ id: 'description', label: 'Mô tả chi tiết', placeholder: 'Ví dụ: Nhảy size áo sơ mi' })}</div>
-                        <div>${FormInput({ id: 'quantity', label: 'Số Lượng', type: 'number', placeholder: '0' })}</div>
+                        <div>${FormInput({ id: 'quantity', label: 'Số Lượng', type: 'number', value: '1', placeholder: '0' })}</div>
                         <div>${FormInput({ id: 'unitPrice', label: 'Đơn Giá', type: 'text', placeholder: '0' })}</div>
                         <div class="text-right">
                             <p class="text-sm text-muted">Thành tiền</p>
