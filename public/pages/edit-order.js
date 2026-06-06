@@ -28,34 +28,56 @@ const renderOrderItemsTable = () => {
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th scope="col" class="px-4 py-3">Dịch Vụ / Chi Tiết</th>
-                        <th scope="col" class="px-4 py-3 text-right">Số Lượng</th>
+                        <th scope="col" class="px-4 py-3 text-center w-24">Chiều dài (m)</th>
+                        <th scope="col" class="px-4 py-3 text-center w-20">Số bản</th>
+                        <th scope="col" class="px-4 py-3 text-right">Tổng số lượng (m)</th>
                         <th scope="col" class="px-4 py-3 text-right">Đơn Giá</th>
                         <th scope="col" class="px-4 py-3 text-right">Thành Tiền</th>
                         <th scope="col" class="px-4 py-3 text-center">Xóa</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${currentOrder.items.map((item, index) => `
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                                <div class="font-semibold">${item.serviceTypeLabel || item.serviceType}</div>
-                                <div class="text-xs text-muted">${item.description || item.fileName || ''}</div>
-                                ${item.hasCreationFee ? `<span class="text-[10px] bg-accent bg-opacity-20 text-accent px-2 py-0.5 rounded mt-1 inline-block">Đã kèm phí chạy sơ đồ</span>` : ''}
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <input type="number" min="0" step="0.01" class="update-item-qty w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" data-index="${index}" value="${item.quantity || 1}">
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <input type="number" min="0" class="update-item-price w-28 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" data-index="${index}" value="${item.unitPrice || 0}">
-                            </td>
-                            <td class="px-4 py-3 text-right font-semibold text-accent item-amount-display">${formatCurrency(item.amount || 0)}</td>
-                            <td class="px-4 py-3 text-center">
-                                <button type="button" class="remove-item-btn text-danger hover:text-opacity-80 p-1 transition-transform hover:scale-110" data-index="${index}" title="Xóa dịch vụ này">
-                                    <i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('')}
+                    ${currentOrder.items.map((item, index) => {
+                        const isMarker = item.serviceType === 'marker';
+                        const itemLength = isMarker ? (item.length || item.quantity || 1) : '';
+                        const itemCopies = isMarker ? (item.copies || 1) : '';
+
+                        return `
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                                    <div class="font-semibold">${item.serviceTypeLabel || item.serviceType}</div>
+                                    <div class="text-xs text-muted">${item.description || item.fileName || ''}</div>
+                                    ${item.hasCreationFee ? `<span class="text-[10px] bg-accent bg-opacity-20 text-accent px-2 py-0.5 rounded mt-1 inline-block">Đã kèm phí chạy sơ đồ</span>` : ''}
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    ${isMarker ? `
+                                        <input type="number" min="0" step="0.01" class="update-item-length w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-center" data-index="${index}" value="${itemLength}">
+                                    ` : '<span class="text-gray-400">-</span>'}
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    ${isMarker ? `
+                                        <input type="number" min="1" step="1" class="update-item-copies w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-center" data-index="${index}" value="${itemCopies}">
+                                    ` : '<span class="text-gray-400">-</span>'}
+                                </td>
+                                <td class="px-4 py-3 text-right whitespace-nowrap">
+                                    ${isMarker ? `
+                                        <input type="number" class="update-item-qty w-20 px-2 py-1 border border-gray-200 dark:border-gray-700 rounded bg-gray-100 dark:bg-gray-800 dark:text-gray-400 text-right cursor-not-allowed" data-index="${index}" value="${item.quantity || 1}" readonly>`
+                                    : `
+                                        <input type="number" min="0" step="0.01" class="update-item-qty w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" data-index="${index}" value="${item.quantity || 1}">
+                                    `}
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <input type="number" min="0" class="update-item-price w-28 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" data-index="${index}" value="${item.unitPrice || 0}">
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-accent item-amount-display">${formatCurrency(item.amount || 0)}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <button type="button" class="remove-item-btn text-danger hover:text-opacity-80 p-1 transition-transform hover:scale-110" data-index="${index}" title="Xóa dịch vụ này">
+                                        <i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
                 </tbody>
             </table>
         </div>
@@ -133,25 +155,53 @@ const setupEditCustomerDropdown = () => {
 const attachEditEventListeners = (orderId) => {
     const itemsContainer = document.getElementById('edit-order-items-container');
 
-    // Lắng nghe sự kiện thay đổi số lượng hoặc giá để tính lại thành tiền tức thì
+    // Lắng nghe sự kiện thay đổi số lượng, chiều dài, số bản hoặc đơn giá để tính lại thành tiền tức thì
     itemsContainer.addEventListener('input', (e) => {
-        if (e.target.classList.contains('update-item-qty') || e.target.classList.contains('update-item-price')) {
+        const isQty = e.target.classList.contains('update-item-qty');
+        const isPrice = e.target.classList.contains('update-item-price');
+        const isLength = e.target.classList.contains('update-item-length');
+        const isCopies = e.target.classList.contains('update-item-copies');
+
+        if (isQty || isPrice || isLength || isCopies) {
             const index = parseInt(e.target.dataset.index, 10);
             const item = currentOrder.items[index];
             const tr = e.target.closest('tr');
             
-            const newQty = parseFloat(tr.querySelector('.update-item-qty').value) || 0;
-            const newPrice = parseFloat(tr.querySelector('.update-item-price').value) || 0;
-            
-            item.quantity = newQty;
-            item.unitPrice = newPrice;
-            item.amount = (newQty * newPrice) + (item.hasCreationFee ? (priceSettings.markerCreationFee || 0) : 0);
+            let length = item.length || item.quantity || 1;
+            let copies = item.copies || 1;
+            let unitPrice = parseFloat(tr.querySelector('.update-item-price').value) || 0;
+            let quantity = 0;
+
+            if (item.serviceType === 'marker') {
+                length = parseFloat(tr.querySelector('.update-item-length').value) || 0;
+                copies = parseInt(tr.querySelector('.update-item-copies').value, 10) || 1;
+                quantity = parseFloat((length * copies).toFixed(2));
+                
+                // Cập nhật trường hiển thị Tổng số lượng trong DOM (vì input này ở chế độ readonly)
+                const qtyInput = tr.querySelector('.update-item-qty');
+                if (qtyInput) qtyInput.value = quantity;
+
+                // Cập nhật giá trị vào object item
+                item.length = length;
+                item.copies = copies;
+                
+                // Đồng bộ và cập nhật lại mô tả cho đúng số bản mới
+                item.description = `In sơ đồ: ${item.fileName || 'Sơ đồ'} (${copies} bản)${item.hasCreationFee ? ' + Phí chạy' : ''}`;
+                const descDiv = tr.querySelector('.text-xs.text-muted');
+                if (descDiv) descDiv.textContent = item.description;
+            } else {
+                quantity = parseFloat(tr.querySelector('.update-item-qty').value) || 0;
+            }
+
+            item.quantity = quantity;
+            item.unitPrice = unitPrice;
+            item.amount = (quantity * unitPrice) + (item.hasCreationFee ? (priceSettings.markerCreationFee || 0) : 0);
             
             // Cập nhật DOM trực tiếp để không bị mất Focus của thẻ input
             const amountCell = tr.querySelector('.item-amount-display');
             if (amountCell) amountCell.textContent = formatCurrency(item.amount);
             
-            // Cập nhật tổng số tiền
+            // Cập nhật tổng số tiền toàn bộ đơn hàng
             currentOrder.totalAmount = currentOrder.items.reduce((sum, i) => sum + (i.amount || 0), 0);
             document.getElementById('edit-total-amount').textContent = formatCurrency(currentOrder.totalAmount);
         }
